@@ -12,3 +12,49 @@
  * NOTE:
  * Your results should not contain any duplicate titles.
  */
+
+WITH
+    no_title AS (
+    SELECT film_id
+    FROM film
+    WHERE title ILIKE '%f%'
+    ),
+
+    no_actor AS (
+        SELECT film_id
+        FROM actor
+        JOIN film_actor USING (actor_id)
+        WHERE first_name || ' ' || last_name ILIKE '%f%'
+    ),
+
+    no_customer AS (
+        SELECT
+            film_id
+        FROM customer
+        JOIN rental USING (customer_id)
+        JOIN inventory USING (inventory_id)
+        WHERE first_name || ' ' || last_name ILIKE '%f%'
+    ),
+    
+    no_address AS (
+        SELECT
+            film_id
+        FROM country
+        JOIN city USING (country_id)
+        JOIN address USING (city_id)
+        JOIN customer USING (address_id)
+        JOIN rental USING (customer_id)
+        JOIN inventory USING (inventory_id)
+        WHERE country ILIKE '%f%'
+            OR city ILIKE '%f%'
+            OR address ILIKE '%f%'
+            OR address2 ILIKE '%f%'
+        )
+
+
+SELECT title
+FROM film
+WHERE film_id NOT IN (SELECT * FROM no_title)
+    AND film_id NOT IN (SELECT * FROM no_actor)
+    AND film_id NOT IN (SELECT * FROM no_customer)
+    AND film_id NOT IN (SELECT * FROM no_address);
